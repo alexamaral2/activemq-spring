@@ -1,0 +1,28 @@
+services:
+  activemq:
+    image: rmohr/activemq:5.15.9
+    container_name: activemq5
+    ports:
+      - "8161:8161"
+      - "5672:5672"
+    environment:
+      ACTIVEMQ_ADMIN_LOGIN: ${ACTIVEMQ_USER}
+      ACTIVEMQ_ADMIN_PASSWORD: ${ACTIVEMQ_PASS}
+    volumes:
+      - ./activemq.xml:/opt/activemq/conf/activemq.xml
+    restart: unless-stopped
+
+  api:
+    build: ./activemq
+    container_name: spring-api
+    environment:
+      AMQP_URL: ${AMQP_URL}
+      AMQP_USER: ${ACTIVEMQ_USER}
+      AMQP_PASS: ${ACTIVEMQ_PASS}
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./activemq:/app             # Mapeia seu código fonte local para dentro do container
+      - ~/.m2:/root/.m2            # Cache do Maven para não baixar as dependências toda hora
+    depends_on:
+      - activemq
